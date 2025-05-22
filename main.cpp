@@ -1,7 +1,9 @@
+#include <array>
 #include <cmath>
 #include <complex>
 #include <cstdint>
 #include <iostream>
+#include <numbers>
 #include <random>
 
 #include "fft.hpp"
@@ -23,6 +25,7 @@ int main() {
 
   FastFourierTransform<N, Complex> fft;
   auto transformed = fft.Transform(arr);
+
   auto reversed = fft.InverseTransform(transformed);
 
   double error_sum = 0;

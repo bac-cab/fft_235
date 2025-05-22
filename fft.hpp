@@ -2,6 +2,9 @@
 #include <cstdint>
 #include <span>
 
+using std::array;
+using std::span;
+
 // Здесь реализован обычный алгоритм Кули-Тьюки, но не по основанию 2, а по
 // основанию D (D = 2, 3, 5). Разница заключается лишь в том, что вместо того,
 // чтобы делить массив на 2 части и рекурсивно вычислять преобразование от них,
@@ -11,13 +14,13 @@
 // ошибка накапливаетя)
 template <uint32_t N, typename Complex = std::complex<double>>
 class FastFourierTransform {
-  using Float = typename std::complex<double>::value_type;
+  using Float = typename Complex::value_type;
   constexpr static Float pi = 3.14159265359;
 
   constexpr static auto powers = []() {
-    std::array<Complex, N> powers;
+    array<Complex, N> powers;
     for (uint32_t i = 0; i < N; ++i) {
-      Float phi = (Float)(2 * i) * pi / (Float)N;
+      Float phi = -(Float)(2 * i) * pi / (Float)N;
       powers[i] = {std::cos(phi), std::sin(phi)};
     }
     return powers;
@@ -37,7 +40,7 @@ class FastFourierTransform {
   // М -- размер меньшего преобразования. Количество D частей, на которые мы
   // разбиваем массив, определяется тем, на что делится M.
   template <uint32_t M, bool Inverse>
-  void DoTransform(std::span<const Complex> in, std::span<Complex> out) {
+  void DoTransform(span<const Complex> in, span<Complex> out) {
     if constexpr (M == 1) {
       out[0] = in[0];
       return;
@@ -55,7 +58,7 @@ class FastFourierTransform {
   // комбинируем их по схеме бабочки. Ради экономии также будем выполнять все
   // операции без дополнительных аллокаций
   template <uint32_t M, uint32_t D, bool Inverse>
-  void DoTransform(std::span<const Complex> in, std::span<Complex> out) {
+  void DoTransform(span<const Complex> in, span<Complex> out) {
     static constexpr uint32_t K = M / D;
     static constexpr uint32_t stride = N / M;
 
@@ -64,7 +67,7 @@ class FastFourierTransform {
     }
 
     for (uint32_t i = 0; i < K; ++i) {
-      std::array<Complex, D> vals;
+      array<Complex, D> vals;
       for (uint32_t j = 0; j < D; ++j) {
         uint32_t idx = i + j * K;
         vals[j] = out[idx];
@@ -81,22 +84,22 @@ class FastFourierTransform {
   }
 
  public:
-  std::array<Complex, N> Transform(const std::array<Complex, N>& input) {
-    std::array<Complex, N> result;
+  array<Complex, N> Transform(const array<Complex, N>& input) {
+    array<Complex, N> result;
 
-    std::span<const Complex> in(input);
-    std::span<Complex> out(result);
+    span<const Complex> in(input);
+    span<Complex> out(result);
 
     DoTransform<N, false>(in, out);
 
     return result;
   }
 
-  std::array<Complex, N> InverseTransform(const std::array<Complex, N>& input) {
-    std::array<Complex, N> result;
+  array<Complex, N> InverseTransform(const array<Complex, N>& input) {
+    array<Complex, N> result;
 
-    std::span<const Complex> in(input);
-    std::span<Complex> out(result);
+    span<const Complex> in(input);
+    span<Complex> out(result);
 
     DoTransform<N, true>(in, out);
     for (uint32_t i = 0; i < N; ++i) {
